@@ -60,7 +60,7 @@ curl --location 'http://localhost:8080/receipts/process' \
       "price": "12.00"
     }
   ],
-  "total": "35.00"
+  "total": "35.35"
 }'
 ```
 
