@@ -10,16 +10,24 @@ Requires go or docker to run. After cloning the repo you must be in the `fetch-b
 
 ### From Local Machine
 1. Run setup commands
-`go mod tidy`
-`go mod vendor`
+```
+go mod tidy
+go mod vendor
+```
 2. Run the command on the command line
-`go run cmd/application/main.go`
+```
+go run cmd/application/main.go
+```
 
 ### Using Docker
 1. Build the container
-`docker build . -t pats-receipt-service`
+```
+docker build . -t pats-receipt-service
+```
 2. Run the container
-`docker run -it -p 8080:8080 pats-receipt-service`
+```
+docker run -it -p 8080:8080 pats-receipt-service
+```
 ---
 Now you should have the server listening on port 8080. Use `ctrl-c` to kill it.
 
@@ -52,11 +60,11 @@ curl --location 'http://localhost:8080/receipts/process' \
       "price": "12.00"
     }
   ],
-  "total": "35.00"
+  "total": "35.35"
 }'
 ```
 
-2. Path: /receipts/{id}/points Method: GET. Used for getting the points total. Where you replace `{id}` with the id of the receipt that is returned from the previous endpoint.
+2. Path: `/receipts/{id}/points` Method: GET. Used for getting the points total. Where you replace `{id}` with the id of the receipt that is returned from the previous endpoint.
 ```
 curl --location 'http://localhost:8080/receipts/{id}/points'
 ```
@@ -65,7 +73,7 @@ curl --location 'http://localhost:8080/receipts/{id}/points'
 
 To run the unit tests I have written for `handler.go` use the command:
 ```
-go test handler/handler.go
+go test ./...
 ```
 
 
