@@ -131,7 +131,7 @@ func ValidateReceipt(r *http.Request) (*pkg.Receipt, error) {
 	}
 
 	// check retailer
-	validRetailer := regexp.MustCompile(`^.+\S+.+$`)
+	validRetailer := regexp.MustCompile(`\S+`)
 	if !validRetailer.MatchString(receipt.Retailer) {
 		return nil, errors.New("Invalid retailer")
 	}

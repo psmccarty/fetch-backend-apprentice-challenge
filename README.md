@@ -29,7 +29,7 @@ docker build . -t pats-receipt-service
 docker run -it -p 8080:8080 pats-receipt-service
 ```
 ---
-Now you should have the server listening on port 8080. Use `ctrl-c` to kill it.
+Now you should have the server listening on port 8080. It is ready to process requests when `Listening on localhost:8080` is printed to the terminal. Use `ctrl-c` to kill it.
 
 ## Interacting with the server
 The server responds to the two requests specified by the assignment description. You can use Postman or a UNIX shell (worked on macOS and I assume on Linux) using these two sample `curl`s (you can change the json data as much as you like):
