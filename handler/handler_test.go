@@ -15,7 +15,7 @@ import (
 func sampleReceipt() pkg.Receipt {
 	receipt := pkg.Receipt{
 		Retailer:     "Target",
-		PurchaseDate: "2022-03-10",
+		PurchaseDate: "2022-04-11",
 		PurchaseTime: "13:01",
 		Items:        []pkg.ReceiptItem{{ShortDescription: "Gatorade", Price: "22.90"}, {ShortDescription: "Food", Price: "10.00"}},
 		Total:        "32.90",

@@ -131,7 +131,7 @@ func ValidateReceipt(r *http.Request) (*pkg.Receipt, error) {
 	}
 
 	// check retailer
-	validRetailer := regexp.MustCompile(`^\S+$`)
+	validRetailer := regexp.MustCompile(`^.+\S+.+$`)
 	if !validRetailer.MatchString(receipt.Retailer) {
 		return nil, errors.New("Invalid retailer")
 	}
@@ -199,7 +199,7 @@ func CalculatePointsFromReceipt(receipt *pkg.Receipt) int {
 
 	// 6 points if the day in the purchase date is odd.
 	formattedDate, _ := time.Parse(DateLayout, receipt.PurchaseDate)
-	if formattedDate.Month()%2 == 1 {
+	if formattedDate.Day()%2 == 1 {
 		points += 6
 	}
 
