@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
+	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/psmccarty/fetch-backend-apprentice-challenge/pkg"
 )
@@ -86,7 +86,21 @@ func (rHandler *ReceiptsHandler) ProcessReceipt(w http.ResponseWriter, r *http.R
 	defer rHandler.dbLock.Unlock()
 
 	// generate id for receipt
-	id := uuid.NewString()
+	//id := uuid.NewString()
+	hash, err := hashstructure.Hash(receipt, nil)
+	if err != nil {
+		log.Println(err)
+		ServerResponse(w, http.StatusInternalServerError, []byte(""))
+		return
+	}
+
+	id := strconv.FormatUint(hash, 10)
+
+	if _, ok := rHandler.db[id]; ok {
+		log.Println("Attempt to submit duplicate receipt")
+		ServerResponse(w, http.StatusConflict, []byte(""))
+		return
+	}
 
 	// calculate points and store them
 	receipt.PointsEarned = CalculatePointsFromReceipt(receipt)
