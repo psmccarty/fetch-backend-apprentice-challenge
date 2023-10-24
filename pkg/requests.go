@@ -6,6 +6,7 @@ type Receipt struct {
 	PurchaseTime string        `json:"purchaseTime"`
 	Items        []ReceiptItem `json:"items"`
 	Total        string        `json:"total"`
+	PointsEarned int           `json:"pointsEarned,omitempty"`
 }
 
 type ReceiptItem struct {

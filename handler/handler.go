@@ -26,13 +26,12 @@ const (
 )
 
 type ReceiptsHandler struct {
-	db          map[string]pkg.Receipt
-	pointsCache map[string]int
-	dbLock      sync.Mutex
+	db     map[string]pkg.Receipt
+	dbLock sync.Mutex
 }
 
 func NewReceiptsHandler() *ReceiptsHandler {
-	rHandler := ReceiptsHandler{db: make(map[string]pkg.Receipt), pointsCache: make(map[string]int)}
+	rHandler := ReceiptsHandler{db: make(map[string]pkg.Receipt)}
 	return &rHandler
 }
 
@@ -52,19 +51,6 @@ func (rHandler *ReceiptsHandler) GetPoints(w http.ResponseWriter, r *http.Reques
 	rHandler.dbLock.Lock()
 	defer rHandler.dbLock.Unlock()
 
-	// check if result is cached
-	if cachedPoints, ok := rHandler.pointsCache[id]; ok {
-		resp := pkg.GetPointsResponse{Points: cachedPoints}
-		payload, err := jsoniter.Marshal(resp)
-		if err != nil {
-			log.Println(err)
-			ServerResponse(w, http.StatusInternalServerError, []byte(""))
-			return
-		}
-		ServerResponse(w, http.StatusOK, payload)
-		return
-	}
-
 	// check if receipt is stored in db
 	receipt, ok := rHandler.db[id]
 	if !ok {
@@ -73,8 +59,8 @@ func (rHandler *ReceiptsHandler) GetPoints(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// compute points
-	points := CalculatePointsFromReceipt(&receipt)
+	// get points and build response
+	points := receipt.PointsEarned
 	resp := pkg.GetPointsResponse{Points: points}
 	payload, err := jsoniter.Marshal(resp)
 	if err != nil {
@@ -82,9 +68,6 @@ func (rHandler *ReceiptsHandler) GetPoints(w http.ResponseWriter, r *http.Reques
 		ServerResponse(w, http.StatusInternalServerError, []byte(""))
 		return
 	}
-
-	// store in cache
-	rHandler.pointsCache[id] = points
 
 	// respond with points
 	ServerResponse(w, http.StatusOK, payload)
@@ -99,8 +82,19 @@ func (rHandler *ReceiptsHandler) ProcessReceipt(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	rHandler.dbLock.Lock()
+	defer rHandler.dbLock.Unlock()
+
 	// generate id for receipt
 	id := uuid.NewString()
+
+	// calculate points and store them
+	receipt.PointsEarned = CalculatePointsFromReceipt(receipt)
+
+	// store receipt in db
+	rHandler.db[id] = *receipt
+
+	// send success response to client
 	resp := pkg.ProcessReceiptResponse{Id: id}
 	payload, err := jsoniter.Marshal(resp)
 	if err != nil {
@@ -108,11 +102,6 @@ func (rHandler *ReceiptsHandler) ProcessReceipt(w http.ResponseWriter, r *http.R
 		ServerResponse(w, http.StatusInternalServerError, []byte(""))
 		return
 	}
-
-	// store receipt in dv
-	rHandler.dbLock.Lock()
-	rHandler.db[id] = *receipt
-	rHandler.dbLock.Unlock()
 
 	// respond with id
 	ServerResponse(w, http.StatusOK, payload)

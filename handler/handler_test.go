@@ -19,6 +19,7 @@ func sampleReceipt() pkg.Receipt {
 		PurchaseTime: "13:01",
 		Items:        []pkg.ReceiptItem{{ShortDescription: "Gatorade", Price: "22.90"}, {ShortDescription: "Food", Price: "10.00"}},
 		Total:        "32.90",
+		PointsEarned: 89,
 	}
 	return receipt
 }
@@ -32,7 +33,7 @@ func dummyProcessReceiptRequest(sampleRequestBody pkg.Receipt) *http.Request {
 func TestNewReceiptsHandler(t *testing.T) {
 	t.Run("NewReceiptsHandler()", func(t *testing.T) {
 		rHandler := NewReceiptsHandler()
-		if rHandler.db == nil || rHandler.pointsCache == nil {
+		if rHandler.db == nil {
 			t.Error("ReceiptsHandler was not initialized correctly")
 		}
 	})
@@ -164,19 +165,7 @@ func TestGetPoints(t *testing.T) {
 		}
 	})
 
-	t.Run("Receipt Cached", func(t *testing.T) {
-		rHandler := NewReceiptsHandler()
-		rHandler.pointsCache["abc"] = 80
-		r, _ := http.NewRequest("GET", "receipts/abc/points", bytes.NewBuffer([]byte("")))
-		w := httptest.NewRecorder()
-		ps := httprouter.Params{httprouter.Param{Key: "id", Value: "abc"}}
-		rHandler.GetPoints(w, r, ps)
-		if w.Result().StatusCode != http.StatusOK {
-			t.Error("Wrong status code")
-		}
-	})
-
-	t.Run("Receipt Found, not cached", func(t *testing.T) {
+	t.Run("Receipt found", func(t *testing.T) {
 		rHandler := NewReceiptsHandler()
 		rHandler.db["abc"] = sampleReceipt()
 		r, _ := http.NewRequest("GET", "receipts/abc/points", bytes.NewBuffer([]byte("")))
@@ -187,6 +176,7 @@ func TestGetPoints(t *testing.T) {
 			t.Error("Wrong status code")
 		}
 	})
+
 }
 
 func TestProcessReceipt(t *testing.T) {
@@ -198,6 +188,9 @@ func TestProcessReceipt(t *testing.T) {
 		if w.Result().StatusCode != http.StatusBadRequest {
 			t.Error("Wrong status code")
 		}
+		if len(rHandler.db) != 0 {
+			t.Error("Invalid receipt was added")
+		}
 	})
 
 	t.Run("Valid Receipt", func(t *testing.T) {
@@ -208,6 +201,9 @@ func TestProcessReceipt(t *testing.T) {
 		rHandler.ProcessReceipt(w, r, nil)
 		if w.Result().StatusCode != http.StatusOK {
 			t.Error("Wrong status code")
+		}
+		if len(rHandler.db) != 1 {
+			t.Error("Valid receipt was not stored")
 		}
 	})
 }
